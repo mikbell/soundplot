@@ -34,39 +34,9 @@ const navLinks = [
     },
 
     {
-        label: "Samples",
-        href: route("samples.index"),
-        active: route().current("samples.index"),
-    },
-
-    {
-        label: "Create Sample",
-        href: route("samples.create"),
-        active: route().current("samples.create"),
-    },
-
-    {
-        label: "Wishlist",
-        href: route("wishlist.index"),
-        active: route().current("wishlist.index"),
-    },
-
-    {
-        label: "Search",
-        href: route("youtube.search"),
-        active: route().current("youtube.search"),
-    },
-
-    {
         label: "Random",
-        href: route("youtube.random"),
-        active: route().current("youtube.random"),
-    },
-
-    {
-        label: "Favorites",
-        href: route("youtube.favorites"),
-        active: route().current("youtube.favorites"),
+        href: route("music.random"),
+        active: route().current("music.random"),
     },
 ];
 
@@ -587,7 +557,7 @@ const logout = () => {
             </header>
 
             <!-- Page Content -->
-            <main class="py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <main class="container py-12 mx-auto sm:px-6 lg:px-8">
                 <slot />
             </main>
         </div>

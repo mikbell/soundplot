@@ -34,10 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
-    'youtube' => [
-        'key' => env('YOUTUBE_API_KEY'),
+    
+    'jamendo' => [
+        'client_id' => env('JAMENDO_CLIENT_ID'),
     ],
+
 
 
 ];
