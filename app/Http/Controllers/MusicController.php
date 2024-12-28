@@ -75,4 +75,22 @@ class MusicController
             ]);
         }
     }
+
+    public function showAlbum($albumId)
+    {
+        $album = $this->musicService->getAlbumTracks($albumId);
+    
+        // Estrai il primo elemento (se l'API restituisce un array)
+        $album = $album[0] ?? null;
+    
+        if (!$album) {
+            abort(404, 'Album non trovato');
+        }
+        
+        return Inertia::render('Album/Show', [
+            'album' => $album,
+        ]);
+    }
+    
+    
 }

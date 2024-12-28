@@ -17,7 +17,10 @@
             </div>
 
             <!-- Lista delle tracce -->
-            <div v-if="isLoading" class="text-center text-gray-500">
+            <div
+                v-if="isLoading"
+                class="text-center text-gray-500 animate-pulse"
+            >
                 Caricamento...
             </div>
             <div v-else>
@@ -28,11 +31,20 @@
                         v-for="track in tracks"
                         :key="track.id"
                         class="flex items-center p-4 transition duration-200 bg-gray-100 border rounded-lg shadow-md cursor-pointer hover:bg-gray-200"
-                        @click="playTrack(track.audio_url)"
+                        @click="togglePlayPause(track)"
                     >
-                        <!-- Icona Play -->
+                        <!-- Icona Play/Pause -->
                         <div class="flex-shrink-0 mr-4">
                             <svg
+                                v-if="track.isPlaying"
+                                class="w-8 h-8 text-gray-700 hover:text-gray-900"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                            </svg>
+                            <svg
+                                v-else
                                 class="w-8 h-8 text-gray-700 hover:text-gray-900"
                                 fill="currentColor"
                                 viewBox="0 0 24 24"
@@ -53,11 +65,13 @@
                             </p>
                         </div>
 
-                        <img
-                            :src="track.album_image"
-                            alt="Artwork"
-                            class="h-16 ml-4"
-                        />
+                        <Link :href="route('album.show', track.album_id)">
+                            <img
+                                :src="track.album_image"
+                                alt="Artwork"
+                                class="h-16 ml-4"
+                            />
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -84,6 +98,8 @@
 <script setup>
 import { ref, watch } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import { Link } from "@inertiajs/vue3";
+import debounce from "lodash/debounce";
 
 // Props per le tracce iniziali
 const props = defineProps({
@@ -92,15 +108,30 @@ const props = defineProps({
 
 // Stato
 const searchQuery = ref("");
-const tracks = ref([...props.initialTracks]);
+const tracks = ref(
+    props.initialTracks.map((track) => ({
+        ...track,
+        isPlaying: false,
+    }))
+);
 const isLoading = ref(false);
+const currentTrackId = ref(null); // Tiene traccia della traccia in riproduzione
 
-// Funzione per riprodurre una traccia
-const playTrack = (trackUrl) => {
+const togglePlayPause = (track) => {
     const audioPlayer = document.querySelector("audio");
-    if (audioPlayer) {
-        audioPlayer.src = trackUrl;
+
+    if (track.isPlaying) {
+        // Pausa
+        audioPlayer.pause();
+        track.isPlaying = false;
+    } else {
+        // Ferma tutte le tracce in riproduzione
+        tracks.value.forEach((t) => (t.isPlaying = false));
+
+        // Riproduzione
+        audioPlayer.src = track.audio_url;
         audioPlayer.play();
+        track.isPlaying = true;
     }
 };
 
@@ -119,12 +150,23 @@ const fetchTracks = async (query) => {
     }
 };
 
-// Watcher per la ricerca
-watch(searchQuery, (newQuery) => {
-    if (newQuery.trim() === "") {
-        tracks.value = [...props.initialTracks]; // Usa la prop in modo sicuro
-    } else {
-        fetchTracks(newQuery);
-    }
-});
+watch(
+    searchQuery,
+    debounce((newQuery) => {
+        if (newQuery.trim() === "") {
+            tracks.value = [...props.initialTracks];
+        } else {
+            fetchTracks(newQuery);
+        }
+    }, 300)
+);
 </script>
+
+<style scoped>
+svg {
+    transition: transform 0.2s ease-in-out;
+}
+svg:hover {
+    transform: scale(1.2);
+}
+</style>

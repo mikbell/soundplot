@@ -1,11 +1,6 @@
 <template>
     <AppLayout :title="track.title">
         <div class="container px-6 py-10 mx-auto">
-            <!-- Titolo del brano -->
-            <h1 class="mb-8 text-5xl font-bold text-center text-gray-800">
-                {{ track.title }}
-            </h1>
-
             <!-- Messaggio di errore -->
             <div
                 v-if="error"
@@ -20,11 +15,13 @@
                 class="flex flex-col items-center"
             >
                 <!-- Immagine dell'album -->
-                <img
-                    :src="track.album_image"
-                    alt="Artwork"
-                    class="mb-6 border border-gray-300 rounded-lg shadow-xl w-72 h-72"
-                />
+                <Link :href="route('album.show', track.album_id)"
+                    ><img
+                        :src="track.album_image"
+                        alt="Artwork"
+                        class="mb-6 border border-gray-300 rounded-lg shadow-xl w-96 h-96"
+                    />
+                </Link>
 
                 <!-- Player audio -->
                 <audio
@@ -49,6 +46,27 @@
                     <PrimaryButton @click="getRandomTrack">
                         Brano Casuale
                     </PrimaryButton>
+
+                    <a
+                        v-if="track.audiodownload"
+                        :href="track.audiodownload"
+                        download
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-6"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                            />
+                        </svg>
+                    </a>
                 </div>
             </div>
 
@@ -64,28 +82,24 @@
             <div
                 class="p-6 mt-8 text-gray-800 bg-gray-100 rounded-lg shadow-lg"
             >
-                <p class="text-lg font-semibold">
-                    <span class="text-indigo-500">Artista:</span>
+                <p class="font-semibold">
+                    <span class="text-blue-500">Artista: </span>
                     {{ track.artist_name }}
                 </p>
-                <p class="text-lg font-semibold">
-                    <span class="text-indigo-500">Traccia:</span>
+                <p class="font-semibold">
+                    <span class="text-blue-500">Traccia: </span>
                     {{ track.title }}
                 </p>
-                <p class="text-lg font-semibold">
-                    <span class="text-indigo-500">Album:</span>
-                    {{ track.album_name }}
+                <p class="font-semibold">
+                    <span class="text-blue-500">Album: </span>
+                    <Link :href="route('album.show', track.album_id)">{{
+                        track.album_name
+                    }}</Link>
                 </p>
-                <p class="text-lg font-semibold">
-                    <span class="text-indigo-500">Data di Rilascio:</span>
+                <p class="font-semibold">
+                    <span class="text-blue-500">Data di Rilascio: </span>
                     {{ formatDate(track.release_date) }}
                 </p>
-                <Link
-                    :href="track.audiodownload"
-                    class="inline-block mt-4 text-indigo-500 underline hover:text-indigo-700"
-                >
-                    Download
-                </Link>
             </div>
         </div>
     </AppLayout>
@@ -99,6 +113,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { router } from "@inertiajs/vue3";
 import SelectInput from "@/Components/SelectInput.vue";
 import dayjs from "dayjs";
+import SecondaryButton from "@/Components/SecondaryButton.vue";
 
 const formatDate = (date) => {
     return dayjs(date).format("DD/MM/YYYY");
@@ -124,6 +139,8 @@ const props = defineProps({
 });
 
 const track = ref(props.track);
+const currentTrackIndex = ref(0); // Indice della traccia corrente
+const playlist = ref(props.tracks || []); // Playlist con tutte le tracce
 const error = ref(props.error);
 const selectedGenre = ref(props.selectedGenre);
 const genres = [
@@ -146,16 +163,15 @@ const genres = [
 ];
 
 const getRandomTrack = () => {
-    console.log("Fetching random track for genre:", selectedGenre.value);
     router.get(route("music.random"), {
         genre: selectedGenre.value,
         preserveScroll: true,
         onSuccess: (page) => {
-            console.log("Random track response:", page.props.track);
             if (page.props.track && page.props.track.track_id) {
                 track.value = page.props.track;
-                console.log("Track value after response:", track.value);
-                checkIfFavorite();
+                // Aggiungi la traccia casuale alla playlist
+                playlist.value.push(page.props.track);
+                currentTrackIndex.value = playlist.value.length - 1;
             } else {
                 console.warn("No valid track received from backend.");
                 track.value = null;
@@ -164,5 +180,14 @@ const getRandomTrack = () => {
             selectedGenre.value = page.props.selectedGenre || "";
         },
     });
+};
+
+const playPreviousTrack = () => {
+    if (currentTrackIndex.value > 0) {
+        currentTrackIndex.value--;
+        track.value = playlist.value[currentTrackIndex.value];
+    } else {
+        console.log("Siamo già alla prima traccia.");
+    }
 };
 </script>

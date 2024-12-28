@@ -21,6 +21,7 @@
     },
     "dependencies": {
         "@inertiajs/inertia": "^0.11.1",
-        "dayjs": "^1.11.13"
+        "dayjs": "^1.11.13",
+        "lodash": "^4.17.21"
     }
 }

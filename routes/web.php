@@ -15,3 +15,4 @@ Route::middleware([
 
 Route::get('/music/random', [MusicController::class, 'random'])->name('music.random');
 Route::get('/api/tracks/search', [MusicController::class, 'search']);
+Route::get('/albums/{id}', [MusicController::class, 'showAlbum'])->name('album.show');

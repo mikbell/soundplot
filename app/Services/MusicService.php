@@ -79,7 +79,7 @@ class MusicService
                 'format' => 'json',
                 'limit' => $limit,
                 'offset' => $offset,
-                'order' => 'popularity_total', // Ordina per popolarità
+                'order' => 'popularity_total',
                 'include' => 'licenses',
             ];
 
@@ -97,13 +97,33 @@ class MusicService
 
     public function getRandomTracks($limit = 30, $genre = null)
     {
-        $offset = rand(0, 100); // Cambia l'offset per ottenere risultati diversi ogni volta
+        $offset = rand(0, 100);
         $cacheKey = 'jamendo_random_tracks_' . $offset . ($genre ? '_' . md5($genre) : '');
 
         return $this->getCachedData($cacheKey, function () use ($limit, $offset, $genre) {
             return $this->searchTracks(null, $genre, $offset, $limit);
         });
     }
+
+    public function getAlbumTracks($albumId)
+    {
+        $params = [
+            'client_id' => $this->clientId,
+            'format' => 'json',
+            'id' => $albumId,
+            'include' => 'licenses',
+        ];
+
+        $response = Http::get('https://api.jamendo.com/v3.0/albums/tracks', $params);
+
+        if ($response->successful()) {
+            return $response->json()['results'];
+        }
+
+        \Log::error("Errore nella richiesta all'API di Jamendo: " . $response->body());
+        return [];
+    }
+
 
 
     protected function formatTracks($tracks)
@@ -116,6 +136,7 @@ class MusicService
                 'audio_url' => $track['audio'] ?? $track['audiodownload'] ?? null,
                 'license_url' => $track['license_ccurl'] ?? null,
                 'album_name' => $track['album_name'] ?? null,
+                'album_id' => $track['album_id'] ?? null,
                 'album_image' => $track['album_image'] ?? asset('storage/images/default.jpg'),
                 'release_date' => $track['releasedate'] ?? null,
                 'lyrics' => $track['lyrics'] ?? null,
